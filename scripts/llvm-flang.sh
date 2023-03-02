@@ -1,20 +1,21 @@
 #!/bin/bash -eu
 
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-
 [ -f $HOME/.proxy_vars.sh ] && source $HOME/.proxy_vars.sh
-CACHE_DIR=${SCRIPT_DIR}/cache
-mkdir -p $CACHE_DIR
+mkdir -p $HOME/Downloads
+CACHE_DIR=$HOME/Downloads
 
-## 100 11x 12x 13x 14x 15x
 LLVM_VERSION=${1:-15x}
+# alwasy take latest version of the frontend
 FLANG_VERSION=20221103
 
 UNAMES=$(uname -s)
 UNAMEM=$(uname -m)
 
-DIR=${SCRIPT_DIR}/${UNAMES}/${UNAMEM}/llvm-flang-${LLVM_VERSION}
-mkdir -p $DIR
+SCRIPT_DIR=$(dirname $(readlink -f $0))
+
+DEST=${DEST:-${SCRIPT_DIR}/../../${UNAMES}/${UNAMEM}/default/llvm-flang-${LLVM_VERSION}}
+mkdir -p ${DEST}
+DIR=$(readlink -f ${DEST})
 
 PREFIX=${DIR}/prefix
 mkdir -p ${PREFIX}/bin/
@@ -22,10 +23,15 @@ mkdir -p ${PREFIX}/lib/
 export LD_LIBRARY_PATH=${PREFIX}/lib:${LD_LIBRARY_PATH:-}
 export PATH=${PREFIX}/bin/:$PATH
 
-MAX_MB_BUILD_JOB=2048
-FREE_MEM_MB=$(free --mega | grep Mem | xargs | cut -d' ' -f4)
-MAX_JOBS=$((FREE_MEM_MB / MAX_MB_BUILD_JOB))
-MAX_JOBS=$(echo -e "$MAX_JOBS\n$(nproc)" | sort -n | head -n 1)
+function nproc_mem() {
+    # 2048 MB allocated per job
+    MAX_MB_BUILD_JOB=${1:-2048}
+    FREE_MEM_MB=$(free --mega | grep Mem | xargs | cut -d' ' -f4)
+    MAX_JOBS=$((FREE_MEM_MB / MAX_MB_BUILD_JOB))
+    MAX_JOBS=$(echo -e "$MAX_JOBS\n$(nproc)" | sort -n | head -n 1)
+    [ $MAX_JOBS == 0 ] && MAX_JOBS=1
+    echo $MAX_JOBS
+}
 
 ## READ
 ## https://github.com/flang-compiler/flang/wiki/Building-Flang
@@ -70,11 +76,12 @@ if [ ! -f ${PREFIX}/bin/clang ]; then
         -DLLVM_ENABLE_PROJECTS="clang;openmp" \
         -DLLVM_ENABLE_CLASSIC_FLANG=ON \
         -G "Unix Makefiles" ${DIR}/${LLVM_FLANG_FOLDER}/llvm)
-    (cd ${BUILD_DIR_LLVM_FLANG} && make -j ${MAX_JOBS} )
-    (cd ${BUILD_DIR_LLVM_FLANG} && make -j ${MAX_JOBS} install)
+    (cd ${BUILD_DIR_LLVM_FLANG} && make -j $(nproc_mem) )
+    (cd ${BUILD_DIR_LLVM_FLANG} && make -j $(nproc_mem) install)
 else
     echo "Skip LLVM FLANG"
 fi
+
 ########################
 ## FLANG
 ########################
@@ -105,8 +112,8 @@ if [ ! -f ${PREFIX}/bin/flang2 ]; then
                 -DCMAKE_CXX_COMPILER=${PREFIX}/bin/clang++ \
                 -DCMAKE_C_COMPILER=${PREFIX}/bin/clang \
             ${DIR}/${FLANG_FOLDER}/runtime/libpgmath)
-        (cd ${BUILD_DIR_LIBPGMATH} && make -j ${MAX_JOBS})
-        (cd ${BUILD_DIR_LIBPGMATH} && make install)
+        (cd ${BUILD_DIR_LIBPGMATH} && make -j $(nproc_mem))
+        (cd ${BUILD_DIR_LIBPGMATH} && make -j $(nproc_mem) install)
     else
         echo "Skip libpgmath"
     fi
@@ -126,8 +133,8 @@ if [ ! -f ${PREFIX}/bin/flang2 ]; then
             -DCMAKE_Fortran_COMPILER_ID=Flang \
             -DLLVM_TARGETS_TO_BUILD=host \
          ${DIR}/${FLANG_FOLDER})
-    (cd ${BUILD_DIR_FLANG} && make -j ${MAX_JOBS})
-    (cd ${BUILD_DIR_FLANG} && make install) 
+    (cd ${BUILD_DIR_FLANG} && make -j $(nproc_mem))
+    (cd ${BUILD_DIR_FLANG} && make -j $(nproc_mem) install) 
 else
     echo "Skip FLANG"
 fi

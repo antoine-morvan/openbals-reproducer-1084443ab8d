@@ -1,18 +1,19 @@
 #!/bin/bash -eu
 
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-
 [ -f $HOME/.proxy_vars.sh ] && source $HOME/.proxy_vars.sh
-CACHE_DIR=${SCRIPT_DIR}/cache
-mkdir -p $CACHE_DIR
+mkdir -p $HOME/Downloads
+CACHE_DIR=$HOME/Downloads
 
-LLVM_VERSION=${1:-15.0.3}
+LLVM_VERSION=${1:-15.0.7}
 
 UNAMES=$(uname -s)
 UNAMEM=$(uname -m)
 
-DIR=${SCRIPT_DIR}/${UNAMES}/${UNAMEM}/llvm-${LLVM_VERSION}
-mkdir -p $DIR
+SCRIPT_DIR=$(dirname $(readlink -f $0))
+
+DEST=${DEST:-${SCRIPT_DIR}/../../${UNAMES}/${UNAMEM}/default/llvm-${LLVM_VERSION}}
+mkdir -p ${DEST}
+DIR=$(readlink -f ${DEST})
 
 PREFIX=${DIR}/prefix
 mkdir -p ${PREFIX}/bin/
@@ -20,10 +21,15 @@ mkdir -p ${PREFIX}/lib/
 export LD_LIBRARY_PATH=${PREFIX}/lib:${LD_LIBRARY_PATH:-}
 export PATH=${PREFIX}/bin/:$PATH
 
-MAX_MB_BUILD_JOB=2048
-FREE_MEM_MB=$(free --mega | grep Mem | xargs | cut -d' ' -f4)
-MAX_JOBS=$((FREE_MEM_MB / MAX_MB_BUILD_JOB))
-MAX_JOBS=$(echo -e "$MAX_JOBS\n$(nproc)" | sort -n | head -n 1)
+function nproc_mem() {
+    # 2048 MB allocated per job
+    MAX_MB_BUILD_JOB=${1:-2048}
+    FREE_MEM_MB=$(free --mega | grep Mem | xargs | cut -d' ' -f4)
+    MAX_JOBS=$((FREE_MEM_MB / MAX_MB_BUILD_JOB))
+    MAX_JOBS=$(echo -e "$MAX_JOBS\n$(nproc)" | sort -n | head -n 1)
+    [ $MAX_JOBS == 0 ] && MAX_JOBS=1
+    echo $MAX_JOBS
+}
 
 ########################
 ### LLVM
@@ -62,12 +68,12 @@ if [ ! -f ${PREFIX}/bin/clang ]; then
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=${PREFIX} \
         -DLLVM_ENABLE_ASSERTIONS=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;openmp" \
+        -DLLVM_ENABLE_PROJECTS="clang;mlir;flang;openmp" \
         -DLLVM_ENABLE_RUNTIMES="compiler-rt" \
         -G "Unix Makefiles" ${DIR}/${LLVM_FOLDER}/llvm)
         
-    (cd ${BUILD_DIR} && make -j ${MAX_JOBS} )
-    (cd ${BUILD_DIR} && make -j ${MAX_JOBS} install)
+    (cd ${BUILD_DIR} && make -j $(nproc_mem) )
+    (cd ${BUILD_DIR} && make -j $(nproc_mem) install)
 else
     echo "Skip LLVM"
 fi
