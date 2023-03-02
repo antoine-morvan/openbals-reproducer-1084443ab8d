@@ -48,14 +48,10 @@ BUILDIR=${DIR}/build/
 
 rm -rf ${BUILDIR}
 mkdir -p ${BUILDIR}
+
 (cd ${BUILDIR} && cmake \
     -DCMAKE_C_FLAGS="-Wno-int-conversion" \
-    -DNO_LAPACKE=ON \
     ${DIR}/${OPENBLAS_DIR} )
 
-set +eu
 (cd ${BUILDIR} && make -j $(nproc))
-set -eu
-(cd ${BUILDIR} && make)
 (cd ${BUILDIR} && make -j $(nproc) test)
-# (cd ${BUILDIR} && make -j $(nproc) install PREFIX=$PREFIX)
