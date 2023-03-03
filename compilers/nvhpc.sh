@@ -55,7 +55,7 @@ NVHPC_CACHE=${CACHE_DIR}/${NVHPC_ARCHIVE}
 ### NVHPC
 ##########################
 
-if [ ! -f ${PREFIX}/${UNAMES}_${UNAMEM}/22.9/compilers/bin/nvc ]; then
+if [ ! -f ${PREFIX}/${UNAMES}_${UNAMEM}/${NVHPC_VERSION}/compilers/bin/nvc ]; then
     if [ ! -d ${DIR}/${NVHPC_FOLDER} ]; then
         if [ ! -f ${DIR}/${NVHPC_ARCHIVE} ]; then
             [ ! -f ${NVHPC_CACHE} ] && \
