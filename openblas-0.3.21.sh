@@ -67,4 +67,11 @@ mkdir -p ${BUILDIR}
     ${DIR}/${OPENBLAS_DIR} )
 
 (cd ${BUILDIR} && make -j $(nproc))
+
+
+echo ""
+echo " -- ulimit -s unlimited"
+ulimit -s unlimited
+echo ""
+
 (cd ${BUILDIR} && make -j $(nproc) test)
