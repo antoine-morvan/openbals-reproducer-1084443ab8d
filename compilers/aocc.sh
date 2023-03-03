@@ -32,7 +32,7 @@ AOCC_CACHE=${CACHE_DIR}/${AOCC_ARCHIVE}
 if [ ! -f ${DIR}/setenv_AOCC.sh ]; then
     if [ ! -d ${DIR}/${AOCC_FOLDER} ]; then
         # no automatic download: manually fetch the archive in the cache folder
-        [ ! -f ${AOCC_CACHE} ] && echo "ERROR: missing '${AOCC_CACHE}'" && exit 1
+        [ ! -f ${AOCC_CACHE} ] && echo -e "\nERROR: missing '${AOCC_CACHE}'\nERROR: This file needs to be downloaded manually because of license agreement.\n" && exit 1
 
         [ ! -f ${DIR}/${AOCC_ARCHIVE} ] && cp ${AOCC_CACHE} ${DIR}/${AOCC_ARCHIVE}
         (cd ${DIR} && tar xf ${DIR}/${AOCC_ARCHIVE})
