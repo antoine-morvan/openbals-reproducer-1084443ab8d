@@ -95,7 +95,6 @@ rm -rf ${BUILDIR}
 mkdir -p ${BUILDIR}
 
 (cd ${BUILDIR} && cmake \
-    -DCMAKE_C_FLAGS="-Wno-int-conversion" \
     ${DIR}/${OPENBLAS_DIR} )
 
 (cd ${BUILDIR} && make -j $(nproc))
