@@ -6,7 +6,8 @@ SCRIPT_DIR=$(dirname $(readlink -f $0))
 CACHE_DIR=${SCRIPT_DIR}/cache
 mkdir -p $CACHE_DIR
 
-OPENBLAS_VERSION=0.3.21
+# OPENBLAS_VERSION=0.3.21
+OPENBLAS_HASH=9feaaa3f395ef2ad654df9f34d2e335d2a1816c0
 
 UNAMES=$(uname -s)
 UNAMEM=$(uname -m)
@@ -40,9 +41,9 @@ case ${COMPILER} in
         ;;
     nvhpc*)
         source ${SCRIPT_DIR}/$UNAMES/$UNAMEM/$COMPILER/setvars.sh
-        export CC=nvcc
-        export FC=nvfortran
+        export CC=nvc
         export CXX=nvc++
+        export FC=nvfortran
         ;;
     oneapi*)
         source ${SCRIPT_DIR}/$UNAMES/$UNAMEM/$COMPILER/setvars.sh
@@ -53,6 +54,11 @@ case ${COMPILER} in
     *) echo "unsupported" && exit 1;;
 esac
 
+
+if [ "${OPENBLAS_VERSION:-}" == "" ]; then
+    # use HASH (git commmit) instead
+    OPENBLAS_VERSION=${OPENBLAS_HASH:0:7}
+fi
 DIR=${SCRIPT_DIR}/${UNAMES}/${UNAMEM}/openblas-${OPENBLAS_VERSION}_${COMPILER}
 mkdir -p $DIR
 PREFIX=${DIR}/prefix
@@ -61,9 +67,17 @@ PREFIX=${DIR}/prefix
 ### OpenBLAS
 ########################
 
-OPENBLAS_DIR=OpenBLAS-${OPENBLAS_VERSION}
-OPENBLAS_ARCHIVE=${OPENBLAS_DIR}.tar.gz
-OPENBLAS_URL=https://github.com/xianyi/OpenBLAS/releases/download/v${OPENBLAS_VERSION}/${OPENBLAS_ARCHIVE}
+
+if [ "${OPENBLAS_HASH:-}" != "" ]; then
+    # use HASH (git commmit) instead
+    OPENBLAS_DIR=OpenBLAS-${OPENBLAS_HASH}
+    OPENBLAS_ARCHIVE=OpenBLAS-${OPENBLAS_HASH}.tar.gz
+    OPENBLAS_URL=https://github.com/xianyi/OpenBLAS/archive/${OPENBLAS_HASH}.tar.gz
+else
+    OPENBLAS_DIR=OpenBLAS-${OPENBLAS_VERSION}
+    OPENBLAS_ARCHIVE=${OPENBLAS_DIR}.tar.gz
+    OPENBLAS_URL=https://github.com/xianyi/OpenBLAS/releases/download/v${OPENBLAS_VERSION}/${OPENBLAS_ARCHIVE}
+fi
 OPENBLAS_CACHE=${CACHE_DIR}/${OPENBLAS_ARCHIVE}
 
 echo "Extract & Build OpenBLAS"
