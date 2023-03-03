@@ -99,6 +99,11 @@ SETVARS_SCRIPT=${DIR}/setvars.sh
 cat > ${SETVARS_SCRIPT} << EOF
 #!/usr/bin/env bash
 
+echo " -- Loading OneAPI ${SHORT_VERSION}"
+
+# hack to avoid undefined variable errors when sourcing following script...
+export DIAGUTIL_PATH=${DIAGUTIL_PATH:-}
+
 source ${PREFIX}/setvars.sh
 
 EOF

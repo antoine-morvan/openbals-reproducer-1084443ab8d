@@ -58,6 +58,13 @@ cat > ${SETVARS_SCRIPT} << EOF
 #!/usr/bin/env bash
 
 echo " -- Loading AOCC ${AOCC_VERSION}"
+
+# hack to avoid undefined variable errors when sourcing following script...
+export LIBRARY_PATH=${LIBRARY_PATH:-}
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}
+export C_INCLUDE_PATH=${C_INCLUDE_PATH:-}
+export CPLUS_INCLUDE_PATH=${CPLUS_INCLUDE_PATH:-}
+
 source ${DIR}/setenv_AOCC.sh
 
 EOF
