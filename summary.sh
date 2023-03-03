@@ -4,7 +4,7 @@
 SCRIPT_DIR=$(dirname $(readlink -f $0))
 SUMMARY_FILE=${SCRIPT_DIR}/summary.md
 
-LOG_FILES=$(find -maxdepth 1 -iname "*openblas.log")
+LOG_FILES=$(find -maxdepth 1 -iname "*openblas.log" | sort)
 
 
 
