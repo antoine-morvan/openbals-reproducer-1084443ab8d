@@ -13,7 +13,7 @@ UNAMEM=$(uname -m)
 
 COMPILER=$1
 case ${COMPILER} in
-    llvm-flang*)
+    llvm-flang*|aocc*)
         source ${SCRIPT_DIR}/$UNAMES/$UNAMEM/$COMPILER/setvars.sh
         export CC=clang
         export FC=flang
@@ -31,6 +31,24 @@ case ${COMPILER} in
         export CC=armclang
         export FC=armflang
         export CXX=armclang++
+        ;;
+    gcc*)
+        source ${SCRIPT_DIR}/$UNAMES/$UNAMEM/$COMPILER/setvars.sh
+        export CC=gcc
+        export FC=gfortran
+        export CXX=g++
+        ;;
+    nvhpc*)
+        source ${SCRIPT_DIR}/$UNAMES/$UNAMEM/$COMPILER/setvars.sh
+        export CC=nvcc
+        export FC=nvfortran
+        export CXX=nvc++
+        ;;
+    oneapi*)
+        source ${SCRIPT_DIR}/$UNAMES/$UNAMEM/$COMPILER/setvars.sh
+        export CC=icx
+        export FC=ifx
+        export CXX=icpx
         ;;
     *) echo "unsupported" && exit 1;;
 esac
