@@ -80,7 +80,7 @@ else
 fi
 OPENBLAS_CACHE=${CACHE_DIR}/${OPENBLAS_ARCHIVE}
 
-echo "Extract & Build OpenBLAS"
+echo "Extract & Build OpenBLAS Version:$OPENBLAS_VERSION"
 if [ ! -d ${DIR}/${OPENBLAS_DIR} ]; then
     if [ ! -f ${DIR}/${OPENBLAS_ARCHIVE} ]; then
         [ ! -f ${OPENBLAS_CACHE} ] && wget -c ${OPENBLAS_URL} -O ${OPENBLAS_CACHE}
